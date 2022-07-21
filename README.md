@@ -3,7 +3,7 @@
 ![Github](https://img.shields.io/badge/code%20style-black-000000.svg)
 ![GitHub](https://img.shields.io/github/license/vectra-ai-research/pyspark-style-guide)
 
-The purpose of this document is to help teams write readable and maintainable programs using [Apache PySpark](https://spark.apache.org/docs/latest/api/python/). This style guide is designed to complement [Black's](https://github.com/psf/black) automatic formatting of Python code. For each style choice, we provide an example and the reasoning behind it. We hope they will make it easier to write high quality PySpark code. 
+The purpose of this document is to help teams write readable and maintainable programs using [Apache PySpark](https://spark.apache.org/docs/latest/api/python/). This style guide is designed to complement [Black's](https://github.com/psf/black) automatic formatting of Python code. For each style choice, we provide an example and the reasoning behind it. We hope they will make it easier to write high quality PySpark code.
 
 This document is an evolving guide. We encourage your suggestions, additions, or improvements (see our section on [contributing](#contributing)).
 
@@ -24,6 +24,7 @@ This document is an evolving guide. We encourage your suggestions, additions, or
     - [Group related filters, keep unrelated filters as serial `filter` calls](#group-related-filters-keep-unrelated-filters-as-serial-filter-calls)
     - [Prefer use of window functions to equivalent re-joining operations](#prefer-use-of-window-functions-to-equivalent-re-joining-operations)
     - [If feasible, `select` columns explicitly and avoid chaining `withColumn`](#if-feasible-select-columns-explicitly-and-avoid-chaining-withcolumn)
+  - [Linting](#linting)
   - [Contributing](#contributing)
 
 
@@ -60,8 +61,8 @@ This prevents name collisions, as many PySpark functions have common names. This
 # good
 df.where(my_filter)
 
-# bad  
-df.filter(my_filter) 
+# bad
+df.filter(my_filter)
 ```
 These (somewhat arbitrary) choices will make our code more consistent.
 
@@ -77,7 +78,7 @@ df.col_name
 Using the dot notation presents several problems. It can lead to name collisions if a column shares a name with a dataframe method. It requires the version of the dataframe with the column you want to access to be bound to a variable, but it may not be. It also doesn't work if the column name contains certain non-letter characters. The most obvious exception to this are joins where the joining column has a different name in the two tables.
 ```python
 downloads.join(
-  users, 
+  users,
   downloads.user_id == user.id,
 )
 ```
@@ -332,6 +333,17 @@ To understand how a single `select` statement can simplify the physical plan and
 *(1) Project [ip_addresses#74599, previous_ips#74665, user_id#74601 AS user_name#74674, array_except(ip_addresses#74599, previous_ips#74665) AS new_ips#74669]
 +- *(1) Project [ip_addresses#74599, coalesce(previous_ips#74600, []) AS previous_ips#74665, user_id#74601]
    +- *(1) Scan ExistingRDD[ip_addresses#74599,previous_ips#74600,user_id#74601]
+```
+
+## Linting
+Custom checkers for the conventions described above are provided in the `checkers` directory.
+To add these to pylint, add the `checkers` directory to `PYTHONPATH`:
+```
+export PYTHONPATH="/path/to/checkers:$PYTHONPATH"
+```
+Then load them as plugins when running pylint:
+```
+pylint --load-plugins=checker file_to_lint.py
 ```
 
 ## Contributing
